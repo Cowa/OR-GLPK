@@ -16,14 +16,14 @@ def algo_enum(enum, way, cursor, cap):
 
 	elif cursor > n: # Si on dépasse les clients, on backtrack
 		pop = way.pop()
-		algo_roxxor(enum, way[:], pop+1, cap - d[pop])
+		algo_enum(enum, way[:], pop+1, cap - d[pop])
 
 	elif d[cursor] + cap <= ca: # On ajoute le client au chemin, et on ajoute le tout à l'énumération
 		way.append(cursor)
 		enum.append(way)
-		algo_roxxor(enum, way[:], cursor+1, cap + d[cursor])
+		algo_enum(enum, way[:], cursor+1, cap + d[cursor])
 
 	else: # Capacité insuffisante, on tente le client prochain
-		algo_roxxor(enum, way[:], cursor+1, cap)
+		algo_enum(enum, way[:], cursor+1, cap)
 
 algo_enum([], [], 1, 0)
