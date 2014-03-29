@@ -3,12 +3,22 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
-vector<vector<int> >* please_enumerate(vector<vector<int> > *enumerate, vector<int> way, int cursor, int cap);
-string please_print_vv(vector<vector<int> > v);
+typedef struct Tour Tour;
+struct Tour{
+	vector<int> way;
+	int length;
+};
+
+vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
+string please_print_vv(vector<Tour> v);
+string please_print_v(vector<int> v);
 bool please_is_it_terminal(vector<int> v, int n);
+Tour please_seek_minimal(vector<int> v);
+int please_compute_length(vector<int> v);
 
 int n = 5;
 int ca = 10;
@@ -21,10 +31,11 @@ int c[6][6] = {{0,334,262,248,277,302},{334,0,118,103,551,105},{262,118,0,31,517
 
 int main() {
 
-	vector<vector<int> > e;
+	vector<Tour> e;
 	
 	please_enumerate(&e, vector<int>(), 1, 0);
 	cout << please_print_vv(e) << endl;
+	return 0;
 }
 
 /***********************
@@ -32,7 +43,7 @@ int main() {
  ***********************/
 
 // Enumerate possibilities
-vector<vector<int> >* please_enumerate(vector<vector<int> > *enumerate, vector<int> way, int cursor, int cap) {
+vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cursor, int cap) {
 
 	if (please_is_it_terminal(way, n)) {
 		return enumerate;
@@ -40,31 +51,51 @@ vector<vector<int> >* please_enumerate(vector<vector<int> > *enumerate, vector<i
 	} else if (cursor > n) {
 		int pop = way.back();
 		way.pop_back();
-		please_enumerate(enumerate, way, pop+1, cap - d[pop]);
+		return please_enumerate(enumerate, way, pop+1, cap - d[pop]);
 
 	} else if (d[cursor] + cap <= ca) {
 		way.push_back(cursor);
-		enumerate->push_back(way);
-		please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
+		enumerate->push_back(please_seek_minimal(way));
+		return please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
 
 	} else {
-		please_enumerate(enumerate, way, cursor + 1, cap);
+		return please_enumerate(enumerate, way, cursor + 1, cap);
 	}
 }
 
-// Create a pretty string for vector of vector
-string please_print_vv(vector<vector<int> > grid) {
-	
-	string print;
+// Return the permutation with minimal length
+Tour please_seek_minimal(vector<int> v) {
 
-	for (vector<int> & row : grid) {
-		print += "|";
-		for (int & elt : row) {
-			print += " " + to_string(elt) + " ";
+	int min = 9999, tmp = 0;
+	Tour t;
+
+	do {
+		tmp = please_compute_length(v);
+		if (tmp < min) {
+			min = tmp;
+			t.way = v;
+			t.length = min;
 		}
-		print += "|\n";
+	} while (next_permutation(v.begin(),v.end()));
+
+	return t;
+}
+
+// Compute length of a way
+int please_compute_length(vector<int> v) {
+
+	int len = 0;
+
+	for (int i = 0; i < v.size(); i++) {
+		if (i == 0)
+			len += c[0][v[i]];
+		else
+			len += c[v[i-1]][v[i]];
 	}
-	return print;
+
+	len += c[v.back()][0];
+
+	return len;
 }
 
 // Check the terminal state
@@ -74,4 +105,28 @@ bool please_is_it_terminal(vector<int> v, int n) {
 		return v[0] == n;
 	}
 	return false;
+}
+
+// Create a pretty string for vector of Tour
+string please_print_vv(vector<Tour> vt) {
+	
+	string print;
+
+	for (Tour & t : vt) {
+		print += to_string(t.length) + " ";
+		print += please_print_v(t.way) + "\n";
+	}
+	return print;
+}
+
+// Create a pretty string for vector
+string please_print_v(vector<int> v) {
+	
+	string print;
+	print += "[ ";
+	for (int & i : v) {
+		print += to_string(i) + " ";
+	}
+	print += "]";
+	return print;
 }
