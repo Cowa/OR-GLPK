@@ -4,14 +4,14 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "data.cpp"
 
 using namespace std;
 
-typedef struct Tour Tour;
-struct Tour{
+typedef struct {
 	vector<int> way;
 	int length;
-};
+} Tour;
 
 vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
 string please_print_vv(vector<Tour> v);
@@ -20,21 +20,34 @@ bool please_is_it_terminal(vector<int> v, int n);
 Tour please_seek_minimal(vector<int> v);
 int please_compute_length(vector<int> v);
 
-int n = 5;
-int ca = 10;
-int d[6] = {-1, 2, 4, 2, 4, 2};
-int c[6][6] = {{0,334,262,248,277,302},{334,0,118,103,551,105},{262,118,0,31,517,180},{248,103,31,0,495,152},{277,551,517,495,0,476},{302,105,180,152,476,0}};
+int n;
+int ca;
+int *d;
+int **c;
 
 /******************
  * THIS. IS. MAIN * <--- Here's the main
  ******************/
 
-int main() {
+ // HOW TO LAUNCH :
+ // Launch it with a parameter to the data file, ex: ./algo_enum A/VRPA35.dat
+int main(int argc, char *argv[]) {
 
+    donnees p;
 	vector<Tour> e;
-	
+
+    lecture_data(argv[1],&p);
+
+    n  = p.nblieux - 1; // count storage is for pussies
+	ca = p.capacite;
+	d  = p.demande;
+	c  = p.C;
+
 	please_enumerate(&e, vector<int>(), 1, 0);
 	cout << please_print_vv(e) << endl;
+
+    free_data(&p);
+
 	return 0;
 }
 
@@ -58,15 +71,13 @@ vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cur
 		enumerate->push_back(please_seek_minimal(way));
 		return please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
 
-	} else {
-		return please_enumerate(enumerate, way, cursor + 1, cap);
-	}
+	} return please_enumerate(enumerate, way, cursor + 1, cap);
 }
 
 // Return the permutation with minimal length
 Tour please_seek_minimal(vector<int> v) {
 
-	int min = 9999, tmp = 0;
+	int min = 9999999, tmp = 0;
 	Tour t;
 
 	do {
@@ -109,7 +120,7 @@ bool please_is_it_terminal(vector<int> v, int n) {
 
 // Create a pretty string for vector of Tour
 string please_print_vv(vector<Tour> vt) {
-	
+
 	string print;
 
 	for (Tour & t : vt) {
@@ -121,7 +132,7 @@ string please_print_vv(vector<Tour> vt) {
 
 // Create a pretty string for vector
 string please_print_v(vector<int> v) {
-	
+
 	string print;
 	print += "[ ";
 	for (int & i : v) {
