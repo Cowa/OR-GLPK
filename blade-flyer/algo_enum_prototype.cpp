@@ -35,6 +35,7 @@ int main() {
 	
 	please_enumerate(&e, vector<int>(), 1, 0);
 	cout << please_print_vv(e) << endl;
+	return 0;
 }
 
 /***********************
@@ -50,15 +51,15 @@ vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cur
 	} else if (cursor > n) {
 		int pop = way.back();
 		way.pop_back();
-		please_enumerate(enumerate, way, pop+1, cap - d[pop]);
+		return please_enumerate(enumerate, way, pop+1, cap - d[pop]);
 
 	} else if (d[cursor] + cap <= ca) {
 		way.push_back(cursor);
 		enumerate->push_back(please_seek_minimal(way));
-		please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
+		return please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
 
 	} else {
-		please_enumerate(enumerate, way, cursor + 1, cap);
+		return please_enumerate(enumerate, way, cursor + 1, cap);
 	}
 }
 
