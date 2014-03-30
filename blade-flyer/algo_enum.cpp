@@ -1,9 +1,8 @@
-/* Compile it this way: g++ -std=c++0x algo_enum.cpp -o algo_enum */
-
 #include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <glpk.h>
 #include "data.cpp"
 
 using namespace std;
@@ -35,6 +34,93 @@ int main(int argc, char *argv[]) {
 
 	please_enumerate(&p, &e, vector<int>(), 1, 0);
 	cout << please_print_vv(e) << endl;
+
+	/**************
+	 * GLPK BELOW *
+	 **************/
+
+	// Initial creation of the GLPK problem
+	glp_prob *prob;
+	prob = glp_create_prob();
+	glp_set_prob_name(prob, "GLPK resolution of the tours");
+	glp_set_obj_dir(prob, GLP_MIN);
+
+	// Initial informations
+	int nb_var = e.size();
+	int nb_cont = p.n - 1; // have to check that one
+
+	// Arrays for the constraints
+	vector<int> ia;
+	vector<int> ja;
+	vector<double> ar;
+
+	// A few variables
+	char constr_names[nb_var+1][20];
+	char var_names[nb_cont+1][20];
+	double z;
+	double x[nb_var+1];
+
+	// Constraints
+	glp_add_rows(prob, nb_cont);
+
+	for(int i=1; i<=nb_cont; i++){
+		sprintf(constr_names[i], "constraint n°%d", i);
+		glp_set_row_name(prob, i, constr_names[i]);
+		glp_set_row_bnds(prob, i, GLP_FX, 1.0, 0.0); // Equality constraint
+	}
+
+	// Variables
+	glp_add_cols(prob, nb_var);
+
+	for(int i=1; i<=nb_var; i++){
+		sprintf(var_names[i], "x%d", i);
+		glp_set_col_name(prob, i, var_names[i]);
+		glp_set_col_bnds(prob, i, GLP_DB, 0.0, 1.0); // Bounds
+		glp_set_col_kind(prob, i, GLP_BV); // Binary
+	}
+
+	// Objective
+	for(int i=1; i<=nb_var; i++){
+		glp_set_obj_coef(prob, i, e[i-1].length);
+	}
+
+	// Matrix of the constraints
+	ia.push_back(0); // Because ia, ja and ar have to start at 1
+	ja.push_back(0);
+	ar.push_back(0.0);
+	for(int i=0; i<nb_var; i++){
+		for(int j=0; j<e[i].way.size(); j++){ // Maybe we could use a "for each"-like statement here
+			ia.push_back(e[i].way[j]);
+			ja.push_back(i+1);
+			ar.push_back(1.0);
+		}
+	}
+
+	glp_load_matrix(prob, ia.size()-1, ia.data(), ja.data(), ar.data()); // Use of data() because GLPK cannot deal with vectors
+	glp_write_lp(prob, NULL, "debug.lp");
+	
+	// Resolution
+	glp_simplex(prob, NULL);
+	glp_intopt(prob, NULL);
+	
+	// Data recovery
+	z = glp_mip_obj_val(prob); // Optimal value
+	for(int i=0; i<nb_var; i++){ // Variable values
+		x[i] = glp_mip_col_val(prob, i+1);
+	}
+
+	printf("z= %lf\n",z);
+	for(int i=0; i<nb_var; i++){
+		printf("x%c = %d, ",'A'+i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
+	}
+	puts("");
+
+	// Data releasing
+	glp_delete_prob(prob);
+
+	/************
+	 * END GLPK *
+	 ************/
 
 	free_data(&p);
 
