@@ -13,40 +13,30 @@ typedef struct {
 	int length;
 } Tour;
 
-vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
+vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
 string please_print_vv(vector<Tour> v);
 string please_print_v(vector<int> v);
 bool please_is_it_terminal(vector<int> v, int n);
-Tour please_seek_minimal(vector<int> v);
-int please_compute_length(vector<int> v);
-
-int n;
-int ca;
-int *d;
-int **c;
+Tour please_seek_minimal(data *p, vector<int> v);
+int please_compute_length(data *p, vector<int> v);
 
 /******************
- * THIS. IS. MAIN * <--- Here's the main
+ * THIS. IS. MAIN *
  ******************/
 
- // HOW TO LAUNCH :
- // Launch it with a parameter to the data file, ex: ./algo_enum A/VRPA35.dat
+// HOW TO LAUNCH :
+// Launch it with an argument to the data file, ex: ./algo_enum A/VRPA35.dat
 int main(int argc, char *argv[]) {
 
-    donnees p;
+	data p;
 	vector<Tour> e;
 
-    lecture_data(argv[1],&p);
+	read_data(argv[1],&p);
 
-    n  = p.nblieux - 1; // count storage is for pussies
-	ca = p.capacite;
-	d  = p.demande;
-	c  = p.C;
-
-	please_enumerate(&e, vector<int>(), 1, 0);
+	please_enumerate(&p, &e, vector<int>(), 1, 0);
 	cout << please_print_vv(e) << endl;
 
-    free_data(&p);
+	free_data(&p);
 
 	return 0;
 }
@@ -56,32 +46,32 @@ int main(int argc, char *argv[]) {
  ***********************/
 
 // Enumerate possibilities
-vector<Tour>* please_enumerate(vector<Tour> *enumerate, vector<int> way, int cursor, int cap) {
+vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap) {
 
-	if (please_is_it_terminal(way, n)) {
+	if (please_is_it_terminal(way, p->n - 1)) {
 		return enumerate;
 
-	} else if (cursor > n) {
+	} else if (cursor > p->n - 1) {
 		int pop = way.back();
 		way.pop_back();
-		return please_enumerate(enumerate, way, pop+1, cap - d[pop]);
+		return please_enumerate(p, enumerate, way, pop+1, cap - p->d[pop]);
 
-	} else if (d[cursor] + cap <= ca) {
+	} else if (p->d[cursor] + cap <= p->ca) {
 		way.push_back(cursor);
-		enumerate->push_back(please_seek_minimal(way));
-		return please_enumerate(enumerate, way, cursor + 1, cap + d[cursor]);
+		enumerate->push_back(please_seek_minimal(p, way));
+		return please_enumerate(p, enumerate, way, cursor + 1, cap + p->d[cursor]);
 
-	} return please_enumerate(enumerate, way, cursor + 1, cap);
+	} return please_enumerate(p, enumerate, way, cursor + 1, cap);
 }
 
 // Return the permutation with minimal length
-Tour please_seek_minimal(vector<int> v) {
+Tour please_seek_minimal(data *p, vector<int> v) {
 
 	int min = 9999999, tmp = 0;
 	Tour t;
 
 	do {
-		tmp = please_compute_length(v);
+		tmp = please_compute_length(p, v);
 		if (tmp < min) {
 			min = tmp;
 			t.way = v;
@@ -93,18 +83,15 @@ Tour please_seek_minimal(vector<int> v) {
 }
 
 // Compute length of a way
-int please_compute_length(vector<int> v) {
+int please_compute_length(data *p, vector<int> v) {
 
-	int len = 0;
+	int len = p->C[0][v[0]];
 
-	for (int i = 0; i < v.size(); i++) {
-		if (i == 0)
-			len += c[0][v[i]];
-		else
-			len += c[v[i-1]][v[i]];
+	for (int i = 1; i < v.size(); i++) {
+		len += p->C[v[i-1]][v[i]];
 	}
 
-	len += c[v.back()][0];
+	len += p->C[v.back()][0];
 
 	return len;
 }
@@ -134,6 +121,7 @@ string please_print_vv(vector<Tour> vt) {
 string please_print_v(vector<int> v) {
 
 	string print;
+	
 	print += "[ ";
 	for (int & i : v) {
 		print += to_string(i) + " ";
