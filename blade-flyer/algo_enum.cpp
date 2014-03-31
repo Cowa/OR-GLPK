@@ -13,7 +13,7 @@ typedef struct {
 } Tour;
 
 vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
-string please_print_vv(vector<Tour> v);
+string please_print_vt(vector<Tour> v);
 string please_print_v(vector<int> v);
 bool please_is_it_terminal(vector<int> v, int n);
 Tour please_seek_minimal(data *p, vector<int> v);
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 	read_data(argv[1],&p);
 
 	please_enumerate(&p, &e, vector<int>(), 1, 0);
-	cout << please_print_vv(e) << endl;
+	cout << please_print_vt(e) << endl;
 
 	/**************
 	 * GLPK BELOW *
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 	// Constraints
 	glp_add_rows(prob, nb_cont);
 
-	for(int i=1; i<=nb_cont; i++){
+	for (int i=1; i<=nb_cont; i++) {
 		sprintf(constr_names[i], "constraint n°%d", i);
 		glp_set_row_name(prob, i, constr_names[i]);
 		glp_set_row_bnds(prob, i, GLP_FX, 1.0, 0.0); // Equality constraint
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 	// Variables
 	glp_add_cols(prob, nb_var);
 
-	for(int i=1; i<=nb_var; i++){
+	for (int i=1; i<=nb_var; i++) {
 		sprintf(var_names[i], "x%d", i);
 		glp_set_col_name(prob, i, var_names[i]);
 		glp_set_col_bnds(prob, i, GLP_DB, 0.0, 1.0); // Bounds
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Objective
-	for(int i=1; i<=nb_var; i++){
+	for (int i=1; i<=nb_var; i++) {
 		glp_set_obj_coef(prob, i, e[i-1].length);
 	}
 
@@ -88,8 +88,8 @@ int main(int argc, char *argv[]) {
 	ia.push_back(0); // Because ia, ja and ar have to start at 1
 	ja.push_back(0);
 	ar.push_back(0.0);
-	for(int i=0; i<nb_var; i++){
-		for(int j=0; j<e[i].way.size(); j++){ // Maybe we could use a "for each"-like statement here
+	for (int i=0; i<nb_var; i++) {
+		for (int j=0; j<e[i].way.size(); j++) { // Maybe we could use a "for each"-like statement here
 			ia.push_back(e[i].way[j]);
 			ja.push_back(i+1);
 			ar.push_back(1.0);
@@ -105,13 +105,13 @@ int main(int argc, char *argv[]) {
 	
 	// Data recovery
 	z = glp_mip_obj_val(prob); // Optimal value
-	for(int i=0; i<nb_var; i++){ // Variable values
+	for (int i=0; i<nb_var; i++) { // Variable values
 		x[i] = glp_mip_col_val(prob, i+1);
 	}
 
 	printf("z= %lf\n",z);
-	for(int i=0; i<nb_var; i++){
-		printf("x%c = %d, ",'A'+i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
+	for (int i=0; i<nb_var; i++) {
+		printf("x%d = %d, ", i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
 	}
 	puts("");
 
@@ -192,7 +192,7 @@ bool please_is_it_terminal(vector<int> v, int n) {
 }
 
 // Create a pretty string for vector of Tour
-string please_print_vv(vector<Tour> vt) {
+string please_print_vt(vector<Tour> vt) {
 
 	string print;
 
@@ -215,3 +215,4 @@ string please_print_v(vector<int> v) {
 	print += "]";
 	return print;
 }
+
