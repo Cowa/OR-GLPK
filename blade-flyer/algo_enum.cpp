@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <glpk.h>
 #include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <limits>
 #include "data.cpp"
 
 using namespace std;
@@ -13,12 +17,17 @@ typedef struct {
 	int length;
 } Tour;
 
+struct timeval start_utime, stop_utime;
+
 vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
 string please_print_vt(vector<Tour> v);
 string please_print_v(vector<int> v);
 bool please_is_it_terminal(vector<int> *v, int n);
 Tour please_seek_minimal(data *p, vector<int> *v);
 int please_compute_length(data *p, vector<int> *v);
+void please_crono_start();
+void please_crono_stop();
+double please_crono_ms();
 
 /******************
  * THIS. IS. MAIN *
@@ -29,9 +38,10 @@ int please_compute_length(data *p, vector<int> *v);
 int main(int argc, char *argv[]) {
 
 	data p;
+	double time;
 	vector<Tour> e;
 
-	read_data(argv[1],&p);
+	please_read_data(argv[1],&p);
 
 	please_enumerate(&p, &e, vector<int>(), 1, 0);
 	cout << please_print_vt(e) << endl;
@@ -39,7 +49,9 @@ int main(int argc, char *argv[]) {
 	/**************
 	 * GLPK BELOW *
 	 **************/
-
+	
+	please_crono_start();
+	
 	// Initial creation of the GLPK problem
 	glp_prob *prob;
 	prob = glp_create_prob();
@@ -49,7 +61,7 @@ int main(int argc, char *argv[]) {
 	// Initial informations
 	int nb_var = e.size();
 	int nb_cont = p.n - 1; // have to check that one
-
+	
 	// Arrays for the constraints
 	vector<int> ia;
 	vector<int> ja;
@@ -112,18 +124,26 @@ int main(int argc, char *argv[]) {
 
 	printf("z= %lf\n",z);
 	for (int i=0; i<nb_var; i++) {
-		printf("x%d = %d, ", i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
+		if ((int)(x[i] + 0.5) == 1)
+			printf("x%d = %d, ", i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
 	}
 	puts("");
 
 	// Data releasing
 	glp_delete_prob(prob);
-
+	
 	/************
 	 * END GLPK *
 	 ************/
+	
+	please_crono_stop();
+	time = please_crono_ms()/1000,0;
+	
+	/* Affichage des résultats (à compléter) */
+	
+	printf("Time : %f\n", time);
 
-	free_data(&p);
+	please_free_data(&p);
 
 	return 0;
 }
@@ -159,7 +179,8 @@ vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way
 // Return the permutation with minimal length
 Tour please_seek_minimal(data *p, vector<int> *v) {
 
-	int min = 9999999, tmp = 0;
+	int tmp = 0;
+	int min = std::numeric_limits<int>::max();
 	Tour t;
 	
 	//cout << "Seeking minimal..." << endl;
@@ -197,14 +218,14 @@ int please_compute_length(data *p, vector<int> *v) {
 // Check the terminal state
 bool please_is_it_terminal(vector<int> *v, int n) {
 
-	cout << "Checking terminating..." << endl;
+	//cout << "Checking terminating..." << endl;
 
-	if (v->size() != 0) {
-
-		cout << "Terminating "<< ((bool) v->at(0) == n) << endl;
+	if (v->size() > 0) {
+		// FUN FACT: access to n cause segfault (for A40, A45, A50, B20, ..., B50)
+		cout << "n = " << n << endl;
 		return v->front() == n;
 	}
-	cout << "Terminating 'cause of size 0." << endl;
+	//cout << "Terminating 'cause of size 0." << endl;
 	return false;
 }
 
@@ -233,5 +254,27 @@ string please_print_v(vector<int> v) {
 	print += "]";
 
 	return print;
+}
+
+void please_crono_start()
+{
+	struct rusage rusage;
+	
+	getrusage(RUSAGE_SELF, &rusage);
+	start_utime = rusage.ru_utime;
+}
+
+void please_crono_stop()
+{
+	struct rusage rusage;
+	
+	getrusage(RUSAGE_SELF, &rusage);
+	stop_utime = rusage.ru_utime;
+}
+
+double please_crono_ms()
+{
+	return (stop_utime.tv_sec - start_utime.tv_sec) * 1000 +
+    (stop_utime.tv_usec - start_utime.tv_usec) / 1000 ;
 }
 

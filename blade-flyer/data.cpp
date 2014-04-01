@@ -9,7 +9,7 @@ typedef struct {
 	int **C; // distancier (les lignes et colonnes 0 correspondent au dépôt)
 } data;
 
-void read_data(char *file, data *p) {
+void please_read_data(char *file, data *p) {
 
 	int i,j;
 	FILE *fin;
@@ -40,7 +40,7 @@ void read_data(char *file, data *p) {
 		fscanf(fin,"%d",&val);
 		p->d[i] = val;
 	}
-
+	
 	/* Lecture du distancier */
 
 	for (i = 0; i < p->n; i++) {
@@ -56,7 +56,7 @@ void read_data(char *file, data *p) {
 
 /* Fonction de libération mémoire des données */
 
-void free_data(data *p) {
+void please_free_data(data *p) {
 
 	int i;
 	for (i = 0; i < p->n; i++) free(p->C[i]);
