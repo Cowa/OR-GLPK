@@ -33,8 +33,6 @@ double please_crono_ms();
  * THIS. IS. MAIN *
  ******************/
 
-// HOW TO LAUNCH :
-// Launch it with an argument to the data file, ex: ./algo_enum A/VRPA35.dat
 int main(int argc, char *argv[]) {
 
 	data p;
@@ -43,8 +41,15 @@ int main(int argc, char *argv[]) {
 
 	please_read_data(argv[1],&p);
 
+	please_crono_start();
+
 	please_enumerate(&p, &e, vector<int>(), 1, 0);
-	cout << please_print_vt(e) << endl;
+
+	please_crono_stop();
+	time = please_crono_ms()/1000,0;
+
+	printf("Time enumerate : %f\n", time);
+	//cout << please_print_vt(e) << endl;
 
 	/**************
 	 * GLPK BELOW *
@@ -125,9 +130,12 @@ int main(int argc, char *argv[]) {
 	printf("z= %lf\n",z);
 	for (int i=0; i<nb_var; i++) {
 		if ((int)(x[i] + 0.5) == 1)
-			printf("x%d = %d, ", i, (int)(x[i] + 0.5)); // To modify, it's just a bad copy/paste of the tp3, like a bad motherfucker
+			printf("x%d = %d, ", i, (int)(x[i] + 0.5));
 	}
 	puts("");
+
+	please_crono_stop();
+	time = please_crono_ms()/1000,0;
 
 	// Data releasing
 	glp_delete_prob(prob);
@@ -135,13 +143,8 @@ int main(int argc, char *argv[]) {
 	/************
 	 * END GLPK *
 	 ************/
-	
-	please_crono_stop();
-	time = please_crono_ms()/1000,0;
-	
-	/* Affichage des résultats (à compléter) */
-	
-	printf("Time : %f\n", time);
+		
+	printf("Time GLPK : %f\n", time);
 
 	please_free_data(&p);
 
@@ -156,22 +159,17 @@ int main(int argc, char *argv[]) {
 vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap) {
 
 	if (please_is_it_terminal(&way, p->n - 1)) {
-		//cout << "Terminating !" << endl;
 		return enumerate;
 
 	} else if (cursor > p->n - 1) {
-		//cout << "Cursoring > n...." << endl;
 		cursor = way.back();
 		way.pop_back();
 		cap -= p->d[cursor];
-		//cout << "Done cursoring > n." << endl;
 
 	} else if (p->d[cursor] + cap <= p->ca) {
-		//cout << "Adding client...." << endl;
 		way.push_back(cursor);
 		enumerate->push_back(please_seek_minimal(p, &way));
 		cap += p->d[cursor];
-		//cout << "Done adding client." << endl;
 
 	} return please_enumerate(p, enumerate, way, cursor + 1, cap);
 }
@@ -179,11 +177,8 @@ vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way
 // Return the permutation with minimal length
 Tour please_seek_minimal(data *p, vector<int> *v) {
 
-	int tmp = 0;
-	int min = std::numeric_limits<int>::max();
 	Tour t;
-	
-	//cout << "Seeking minimal..." << endl;
+	int tmp = 0, min = numeric_limits<int>::max();
 	
 	do {
 		tmp = please_compute_length(p, v);
@@ -193,16 +188,13 @@ Tour please_seek_minimal(data *p, vector<int> *v) {
 			t.length = min;
 		}
 	} while (next_permutation(v->begin(),v->end()));
-	
-	//cout << "Seeking done." << endl;
-	
+		
 	return t;
 }
 
 // Compute length of a way
 int please_compute_length(data *p, vector<int> *v) {
 	
-	//cout << "Computing length..." << endl;
 	int len = p->C[0][v->at(0)];
 
 	for (unsigned int i = 1; i < v->size(); i++) {
@@ -211,21 +203,21 @@ int please_compute_length(data *p, vector<int> *v) {
 
 	len += p->C[v->back()][0];
 	
-	//cout << "Computing done." << endl;
 	return len;
 }
 
 // Check the terminal state
 bool please_is_it_terminal(vector<int> *v, int n) {
 
-	//cout << "Checking terminating..." << endl;
-
+	// cout << "Checking terminal state..." << endl;
 	if (v->size() > 0) {
-		// FUN FACT: access to n cause segfault (for A40, A45, A50, B20, ..., B50)
-		cout << "n = " << n << endl;
+		// VERY FUNNY FACT: access to n cause segfault (for A40, A45, A50, B20, ..., B50)
+		// Uncomment the following 'cout' lines to see the proof (and laugh/cry with us)
+		//cout << "n = " << n << endl;
+		//cout << "Done checking." << endl;
 		return v->front() == n;
 	}
-	//cout << "Terminating 'cause of size 0." << endl;
+	//cout << "Done checking." << endl;
 	return false;
 }
 
@@ -256,25 +248,20 @@ string please_print_v(vector<int> v) {
 	return print;
 }
 
-void please_crono_start()
-{
+void please_crono_start() {
 	struct rusage rusage;
-	
 	getrusage(RUSAGE_SELF, &rusage);
 	start_utime = rusage.ru_utime;
 }
 
-void please_crono_stop()
-{
+void please_crono_stop() {
 	struct rusage rusage;
 	
 	getrusage(RUSAGE_SELF, &rusage);
 	stop_utime = rusage.ru_utime;
 }
 
-double please_crono_ms()
-{
+double please_crono_ms() {
 	return (stop_utime.tv_sec - start_utime.tv_sec) * 1000 +
     (stop_utime.tv_usec - start_utime.tv_usec) / 1000 ;
 }
-
