@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <glpk.h>
+#include <stdio.h>
 #include "data.cpp"
 
 using namespace std;
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
 	ja.push_back(0);
 	ar.push_back(0.0);
 	for (int i=0; i<nb_var; i++) {
-		for (int j=0; j<e[i].way.size(); j++) { // Maybe we could use a "for each"-like statement here
+		for (unsigned int j=0; j<e[i].way.size(); j++) { // Maybe we could use a "for each"-like statement here
 			ia.push_back(e[i].way[j]);
 			ja.push_back(i+1);
 			ar.push_back(1.0);
@@ -98,11 +99,11 @@ int main(int argc, char *argv[]) {
 
 	glp_load_matrix(prob, ia.size()-1, ia.data(), ja.data(), ar.data()); // Use of data() because GLPK cannot deal with vectors
 	glp_write_lp(prob, NULL, "debug.lp");
-	
+
 	// Resolution
 	glp_simplex(prob, NULL);
 	glp_intopt(prob, NULL);
-	
+
 	// Data recovery
 	z = glp_mip_obj_val(prob); // Optimal value
 	for (int i=0; i<nb_var; i++) { // Variable values
@@ -138,14 +139,14 @@ vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way
 		return enumerate;
 
 	} else if (cursor > p->n - 1) {
-		int pop = way.back();
+		cursor = way.back();
 		way.pop_back();
-		return please_enumerate(p, enumerate, way, pop+1, cap - p->d[pop]);
+		cap -= p->d[cursor];
 
 	} else if (p->d[cursor] + cap <= p->ca) {
 		way.push_back(cursor);
 		enumerate->push_back(please_seek_minimal(p, way));
-		return please_enumerate(p, enumerate, way, cursor + 1, cap + p->d[cursor]);
+		cap += p->d[cursor];
 
 	} return please_enumerate(p, enumerate, way, cursor + 1, cap);
 }
@@ -173,7 +174,7 @@ int please_compute_length(data *p, vector<int> v) {
 
 	int len = p->C[0][v[0]];
 
-	for (int i = 1; i < v.size(); i++) {
+	for (unsigned int i = 1; i < v.size(); i++) {
 		len += p->C[v[i-1]][v[i]];
 	}
 
@@ -207,7 +208,7 @@ string please_print_vt(vector<Tour> vt) {
 string please_print_v(vector<int> v) {
 
 	string print;
-	
+
 	print += "[ ";
 	for (int & i : v) {
 		print += to_string(i) + " ";
