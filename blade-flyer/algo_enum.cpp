@@ -16,9 +16,9 @@ typedef struct {
 vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap);
 string please_print_vt(vector<Tour> v);
 string please_print_v(vector<int> v);
-bool please_is_it_terminal(vector<int> v, int n);
-Tour please_seek_minimal(data *p, vector<int> v);
-int please_compute_length(data *p, vector<int> v);
+bool please_is_it_terminal(vector<int> *v, int n);
+Tour please_seek_minimal(data *p, vector<int> *v);
+int please_compute_length(data *p, vector<int> *v);
 
 /******************
  * THIS. IS. MAIN *
@@ -135,60 +135,76 @@ int main(int argc, char *argv[]) {
 // Enumerate possibilities
 vector<Tour>* please_enumerate(data *p, vector<Tour> *enumerate, vector<int> way, int cursor, int cap) {
 
-	if (please_is_it_terminal(way, p->n - 1)) {
+	if (please_is_it_terminal(&way, p->n - 1)) {
+		//cout << "Terminating !" << endl;
 		return enumerate;
 
 	} else if (cursor > p->n - 1) {
+		//cout << "Cursoring > n...." << endl;
 		cursor = way.back();
 		way.pop_back();
 		cap -= p->d[cursor];
+		//cout << "Done cursoring > n." << endl;
 
 	} else if (p->d[cursor] + cap <= p->ca) {
+		//cout << "Adding client...." << endl;
 		way.push_back(cursor);
-		enumerate->push_back(please_seek_minimal(p, way));
+		enumerate->push_back(please_seek_minimal(p, &way));
 		cap += p->d[cursor];
+		//cout << "Done adding client." << endl;
 
 	} return please_enumerate(p, enumerate, way, cursor + 1, cap);
 }
 
 // Return the permutation with minimal length
-Tour please_seek_minimal(data *p, vector<int> v) {
+Tour please_seek_minimal(data *p, vector<int> *v) {
 
 	int min = 9999999, tmp = 0;
 	Tour t;
-
+	
+	//cout << "Seeking minimal..." << endl;
+	
 	do {
 		tmp = please_compute_length(p, v);
 		if (tmp < min) {
 			min = tmp;
-			t.way = v;
+			t.way = *v;
 			t.length = min;
 		}
-	} while (next_permutation(v.begin(),v.end()));
-
+	} while (next_permutation(v->begin(),v->end()));
+	
+	//cout << "Seeking done." << endl;
+	
 	return t;
 }
 
 // Compute length of a way
-int please_compute_length(data *p, vector<int> v) {
+int please_compute_length(data *p, vector<int> *v) {
+	
+	//cout << "Computing length..." << endl;
+	int len = p->C[0][v->at(0)];
 
-	int len = p->C[0][v[0]];
-
-	for (unsigned int i = 1; i < v.size(); i++) {
-		len += p->C[v[i-1]][v[i]];
+	for (unsigned int i = 1; i < v->size(); i++) {
+		len += p->C[v->at(i-1)][v->at(i)];
 	}
 
-	len += p->C[v.back()][0];
-
+	len += p->C[v->back()][0];
+	
+	//cout << "Computing done." << endl;
 	return len;
 }
 
 // Check the terminal state
-bool please_is_it_terminal(vector<int> v, int n) {
+bool please_is_it_terminal(vector<int> *v, int n) {
 
-	if (v.size() != 0) {
-		return v[0] == n;
+	cout << "Checking terminating..." << endl;
+
+	if (v->size() != 0) {
+
+		cout << "Terminating "<< ((bool) v->at(0) == n) << endl;
+		return v->front() == n;
 	}
+	cout << "Terminating 'cause of size 0." << endl;
 	return false;
 }
 
@@ -201,6 +217,7 @@ string please_print_vt(vector<Tour> vt) {
 		print += to_string(t.length) + " ";
 		print += please_print_v(t.way) + "\n";
 	}
+	
 	return print;
 }
 
@@ -214,6 +231,7 @@ string please_print_v(vector<int> v) {
 		print += to_string(i) + " ";
 	}
 	print += "]";
+
 	return print;
 }
 

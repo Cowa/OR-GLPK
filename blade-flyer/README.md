@@ -8,7 +8,7 @@ Compile
 
 You'll need GLPK.
 
-```g++ -std=c++0x algo_enum.cpp -o algo_enum -lglpk -lm```
+```g++ -std=c++0x algo_enum.cpp -o algo_enum -lglpk```
 
 Launch
 ------
